@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link rel="stylesheet" href="/static/blog/bs/css/bootstrap.css">
+    <style>
+        #avator_img{
+            margin-left: 20px;
+        }
+        #avator{
+            display: none;
+        }
+        .error{
+            color: red;
+        }
+    </style>
+</head>
+<body>
+<h3 class="text-center">注册页面</h3>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 col-lg-offset-3">
+            <form id="form">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.auto_id }}">{{ field.label }}</label>
+                        {{ field }} <span class="error pull-right"></span>
+                    </div>
+                {% endfor %}
+                <div class="form-group">
+                    <label for="avator">
+                        头像<img id="avator_img" width="60" height="60" src="/static/blog/img/default.png" alt="">
+                    </label>
+                    <input type="file" id="avator" >
+                </div>
+                <input type="button" class="btn btn-default reg_btn" value="submit"><span class="error"></span>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="/static/js/jquery-3.2.1.min.js"></script>
+<script>
+    $("#avator").change(function () {
+       var file_obj = $(this)[0].files[0];
+       var reader = new FileReader();
+       // 读文件路径
+       reader.readAsDataURL(file_obj);
+       reader.onload = function () {
+           $("#avator_img").attr("src", reader.result);
+       }
+
+    });
+    $(".reg_btn").click(function () {
+        // FormData封装数据
+        var formdata = new FormData();
+        var request_data = $("#form").serializeArray();
+        $.each(request_data, function (index, data) {
+            formdata.append(data.name, data.value);
+        });
+        // 头像路径
+        formdata.append("avator", $("#avator")[0].files[0]);
+        $.ajax({
+            url:"",
+            type:"post",
+            contentType:false,
+            processData:false,
+            data:formdata,
+            success:function (data) {
+                if(data.user){
+                    location.href = "/login/";
+                }else{
+                    $("span.error").html("");
+                    $(".form-group").removeClass("has-error");
+                    $.each(data.msg, function (field, error_list) {
+                        // 处理全局钩子
+                        if(field == "__all__"){
+                            $("#id_re_pwd").next().html(error_list).parent().addClass("has-error");
+                        }
+                        $("#id_"+field).next().html(error_list);
+                        $("#id_"+field).parent().addClass("has-error");
+                    });
+                }
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
